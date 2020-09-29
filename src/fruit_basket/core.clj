@@ -3,7 +3,7 @@
   (:require [clojure.math.numeric-tower :refer [expt]]
             [kixi.stats.distribution :refer [gamma sample]]))
 
-(def fruit-types
+(def ^:const default-fruit-types
   "Map of fruit types"
   {:green-apple {:key :green-apple :string "🍏" :points (* 5 0)     :level 0}
    :red-apple   {:key :red-apple   :string "🍎" :points (* 5 1)     :level 1}
@@ -64,7 +64,7 @@
 (defn draw-fruits
   "Draw n random fruits from the fruit-types map given a luck score"
   [& {:keys [n luck fruit-types]
-      :or {fruit-types fruit-types}}]
+      :or {fruit-types default-fruit-types}}]
   (letfn [(draw-fruit [luck-val]
             (-> (select-fruit fruit-types luck-val)
                 (assoc :luck-val luck-val
@@ -72,6 +72,28 @@
     (->> (luck-distribution luck)
          (sample n)
          (map draw-fruit))))
+
+(def ^:const default-max-fruits 5)
+
+(defn top-up-fruits
+  "Given a user, generate events which add fruits to that user up to the max"
+  [& {:keys [user fruit-types max-fruits]
+      :or {fruit-types default-fruit-types
+           max-fruits default-max-fruits}}]
+  (let [n (->> user
+               :fruits
+               count
+               (- max-fruits)
+               (max 0))
+        fruit->event (fn [fruit]
+                       {:event-type :add-fruit
+                        :user-id (:id user)
+                        :source :found
+                        :fruit fruit})]
+    (->> (draw-fruits :n n
+                      :luck (:luck user)
+                      :fruit-types fruit-types)
+         (map fruit->event))))
 
 (defn -main
   "I don't do a whole lot ... yet."
