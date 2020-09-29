@@ -46,11 +46,12 @@
    :fries       {:key :fries       :string "🍟" :points (expt 15 3) :level 39}
    :pizza       {:key :pizza       :string "🍕" :points (expt 16 3) :level 40}
    :sandwich    {:key :sandwich    :string "🥪" :points (expt 17 3) :level 41}
-   :falafel     {:key :falafel     :string "🧆" :points (expt 18 3) :level 42}})
+   :falafel     {:key :falafel     :string "🧆" :points (expt 18 3) :level 42}
+   :rice-ball   {:key :rice-ball   :string "🍙" :points (expt 19 3) :level 43}})
 
-(defn- draw-luck-array
-  [n luck]
-  (sample n (gamma {:shape 1 :scale luck})))
+(defn- luck-distribution
+  [luck]
+  (gamma {:shape 1 :scale luck}))
 
 (defn- select-fruit
   "Select a fruit from a fruit-types map given the number of points"
@@ -68,7 +69,8 @@
             (-> (select-fruit fruit-types luck-val)
                 (assoc :luck-val luck-val
                        :luck-score luck)))]
-    (->> (draw-luck-array n luck)
+    (->> (luck-distribution luck)
+         (sample n)
          (map draw-fruit))))
 
 (defn -main
