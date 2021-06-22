@@ -95,6 +95,19 @@
                       :fruit-types fruit-types)
          (map fruit->event))))
 
+(defmulti process-command (fn [command _game-state] (:command-type command)))
+
+(defmethod process-command :top-up-fruit [top-up-fruit-command game-state]
+  (letfn [(update-command-array [state]
+            (update state :commands #(conj % top-up-fruit-command)))]
+    (-> game-state update-command-array)))
+
+(defmethod process-command :default [command game-state]
+  (update game-state
+          :errors
+          #(conj % {:error-type :unprocessable-command
+                    :reason (str "Unknown command type " (:command-type command))})))
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
